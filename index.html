@@ -16,7 +16,7 @@
         extend: {
           colors: {
             primary: '#165DFF',
-            secondary: '#FF7D00',
+            secondary: '#FB7299', // B站粉色作为辅助色
             dark: '#121212',
             light: '#F5F5F7'
           },
@@ -65,20 +65,29 @@
       <div class="bg-white rounded-xl p-4 md:p-6 player-shadow">
         <h2 class="text-xl md:text-2xl font-semibold mb-4 text-dark">视频播放区</h2>
         <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden relative flex items-center justify-center" id="videoContainer">
-          <!-- 默认视频示例 - YouTube视频 -->
+          <!-- 默认视频示例 - B站视频（确保可播放） -->
           <iframe id="videoPlayer" 
                   width="100%" 
                   height="100%" 
-                  src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
-                  title="YouTube视频播放器" 
+                  src="https://player.bilibili.com/player.html?isOutside=true&aid=54121728&bvid=BV1kJ411p7mV&cid=94542679&page=1" 
+                  title="B站视频播放器" 
                   frameborder="0" 
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                  allowfullscreen>
+                  scrolling="no"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; scripts"
+                  onload="hideLoading()"
+                  onerror="handlePlayerError()">
           </iframe>
           
           <!-- 加载状态指示器 -->
           <div id="loadingIndicator" class="hidden absolute inset-0 bg-black/5 flex items-center justify-center">
             <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-secondary"></div>
+          </div>
+          
+          <!-- 错误提示区 -->
+          <div id="errorDisplay" class="hidden absolute inset-0 bg-red-50 flex flex-col items-center justify-center p-6 text-center">
+            <i class="fa fa-exclamation-circle text-red-500 text-5xl mb-4"></i>
+            <h3 class="text-xl font-bold text-red-800 mb-2">视频播放失败</h3>
+            <p id="errorMessage" class="text-red-700">请检查视频嵌入代码是否正确</p>
           </div>
         </div>
       </div>
@@ -89,8 +98,32 @@
       <div class="bg-white rounded-xl p-4 md:p-6 player-shadow">
         <h2 class="text-xl md:text-2xl font-semibold mb-4 text-dark">更换视频</h2>
         <p class="text-gray-600 mb-6 text-sm md:text-base">
-          请输入视频网站的嵌入代码（支持YouTube、Vimeo、B站等主流视频平台）
+          请输入视频网站的嵌入代码（支持YouTube、B站、Vimeo等主流视频平台）
         </p>
+        
+        <!-- 平台-specific使用说明 -->
+        <div class="bg-blue-50 border-l-4 border-primary p-4 mb-6 rounded-r">
+          <h3 class="font-medium text-primary flex items-center">
+            <i class="fa fa-info-circle mr-2"></i>平台嵌入说明
+          </h3>
+          <div class="mt-2 text-sm text-gray-700 space-y-3">
+            <div>
+              <span class="font-medium">B站视频：</span>
+              <ul class="list-disc list-inside mt-1 space-y-1">
+                <li>嵌入代码必须包含 <code class="bg-gray-100 px-1 rounded">https://</code>（完整协议，不能用<code class="bg-gray-100 px-1 rounded">//</code>）</li>
+                <li>需确保代码中有 <code class="bg-gray-100 px-1 rounded">isOutside=true</code> 参数（允许外部嵌入）</li>
+                <li>推荐添加权限：<code class="bg-gray-100 px-1 rounded">allow="scripts; fullscreen"</code></li>
+              </ul>
+            </div>
+            <div>
+              <span class="font-medium">YouTube视频：</span>
+              <ul class="list-disc list-inside mt-1">
+                <li>视频需开启"允许嵌入"设置</li>
+                <li>代码格式应为 <code class="bg-gray-100 px-1 rounded">https://www.youtube.com/embed/视频ID</code></li>
+              </ul>
+            </div>
+          </div>
+        </div>
         
         <form id="videoForm" class="space-y-4">
           <div>
@@ -98,8 +131,8 @@
             <textarea id="videoCode" 
                       rows="4" 
                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-smooth resize-none"
-                      placeholder='例如: <iframe src="https://www.youtube.com/embed/视频ID"...></iframe>'>
-<iframe width="100%" height="100%" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube视频播放器" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                      placeholder='例如: <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=..."></iframe>'>
+<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=115551665980936&bvid=BV11MC5BxEbi&cid=34015086238&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" allow="scripts"></iframe>
             </textarea>
           </div>
           
@@ -130,8 +163,10 @@
     const videoForm = document.getElementById('videoForm');
     const videoCode = document.getElementById('videoCode');
     const videoContainer = document.getElementById('videoContainer');
-    const videoPlayer = document.getElementById('videoPlayer');
+    let videoPlayer = document.getElementById('videoPlayer');
     const loadingIndicator = document.getElementById('loadingIndicator');
+    const errorDisplay = document.getElementById('errorDisplay');
+    const errorMessage = document.getElementById('errorMessage');
     const message = document.getElementById('message');
     const resetBtn = document.getElementById('resetBtn');
     
@@ -149,28 +184,57 @@
         message.classList.add('bg-green-100', 'text-green-800');
       }
       
-      // 3秒后自动隐藏消息
       setTimeout(() => {
         message.classList.add('hidden');
       }, 3000);
     }
     
+    // 隐藏加载状态
+    function hideLoading() {
+      loadingIndicator.classList.add('hidden');
+      errorDisplay.classList.add('hidden');
+    }
+    
+    // 处理播放器错误（针对B站的特殊处理）
+    function handlePlayerError() {
+      loadingIndicator.classList.add('hidden');
+      errorDisplay.classList.remove('hidden');
+      
+      // 检测是否是B站链接，给出针对性提示
+      if (videoPlayer.src.includes('bilibili.com')) {
+        errorMessage.textContent = 'B站视频播放失败：请检查是否添加了https://协议，或尝试更换其他视频';
+      } else {
+        errorMessage.textContent = '视频无法播放：可能是嵌入权限受限，请检查代码或更换视频';
+      }
+    }
+    
+    // 优化B站代码（自动补全协议）
+    function optimizeBilibiliCode(code) {
+      if (code.includes('bilibili.com') && code.includes('src="//')) {
+        // 将相对协议//替换为https://
+        return code.replace('src="//', 'src="https://');
+      }
+      return code;
+    }
+    
     // 更换视频
     function changeVideo(code) {
-      // 简单验证代码是否包含iframe标签
-      if (!code.includes('<iframe') || !code.includes('</iframe>')) {
+      // 优化B站代码（自动补全协议）
+      const optimizedCode = optimizeBilibiliCode(code);
+      
+      // 验证iframe标签
+      if (!optimizedCode.includes('<iframe') || !optimizedCode.includes('</iframe>')) {
         showMessage('请输入有效的视频嵌入代码（需包含iframe标签）', true);
         return false;
       }
       
       // 显示加载状态
       loadingIndicator.classList.remove('hidden');
+      errorDisplay.classList.add('hidden');
       
-      // 创建临时div解析HTML
+      // 解析iframe
       const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = code;
-      
-      // 获取第一个iframe元素
+      tempDiv.innerHTML = optimizedCode;
       const newIframe = tempDiv.querySelector('iframe');
       
       if (!newIframe) {
@@ -179,27 +243,29 @@
         return false;
       }
       
-      // 设置iframe属性以确保响应式显示
+      // 强制设置必要属性（针对B站优化）
       newIframe.width = '100%';
       newIframe.height = '100%';
       newIframe.id = 'videoPlayer';
+      newIframe.frameborder = '0';
+      newIframe.scrolling = 'no';
       
-      // 替换现有播放器
+      // 添加必要权限（B站需要scripts权限运行播放器）
+      const existingAllow = newIframe.allow || '';
+      newIframe.allow = existingAllow + '; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; scripts';
+      
+      // 绑定事件
+      newIframe.onload = hideLoading;
+      newIframe.onerror = handlePlayerError;
+      
+      // 替换播放器
       videoContainer.replaceChild(newIframe, videoPlayer);
-      
-      // 更新全局引用
       videoPlayer = newIframe;
-      
-      // 隐藏加载状态并显示成功消息
-      setTimeout(() => {
-        loadingIndicator.classList.add('hidden');
-        showMessage('视频已成功更新');
-      }, 800);
       
       return true;
     }
     
-    // 表单提交事件
+    // 表单提交
     videoForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const code = videoCode.value.trim();
@@ -212,15 +278,15 @@
       changeVideo(code);
     });
     
-    // 重置按钮事件
+    // 重置按钮
     resetBtn.addEventListener('click', () => {
       videoCode.value = defaultVideoCode;
       changeVideo(defaultVideoCode);
     });
     
-    // 页面加载完成后初始化
+    // 初始化
     window.addEventListener('load', () => {
-      showMessage('就绪：请输入视频嵌入代码更换播放内容');
+      showMessage('就绪：支持B站、YouTube等平台的视频嵌入');
     });
   </script>
 </body>
