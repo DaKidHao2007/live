@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 关键：设置Referrer-Policy为YouTube推荐的strict-origin-when-cross-origin -->
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <title>Live</title>
+  
+  <!-- 引入Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入Font Awesome图标 -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 配置Tailwind主题 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#FF7D00',
+            dark: '#121212',
+            light: '#F5F5F7'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .player-shadow {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      }
+      .transition-smooth {
+        transition: all 0.3s ease-in-out;
+      }
+    }
+  </style>
+</head>
+<body class="font-inter bg-light min-h-screen">
+  <!-- 导航栏 -->
+  <header class="bg-dark text-white shadow-md">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-play-circle text-secondary text-2xl"></i>
+        <h1 class="text-2xl font-bold">Live</h1>
+      </div>
+      <nav>
+        <!-- 移除所有noreferrer属性，确保Referer正常传递 -->
+        <a href="#" class="text-white/80 hover:text-secondary transition-smooth px-3 py-2">
+          <i class="fa fa-question-circle mr-1"></i>帮助
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 md:py-16">
+    <!-- 第一模块：视频播放器 -->
+    <section class="mb-12 md:mb-20">
+      <div class="bg-white rounded-xl p-4 md:p-6 player-shadow">
+        <h2 class="text-xl md:text-2xl font-semibold mb-4 text-dark">视频播放区</h2>
+        <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden relative flex items-center justify-center" id="videoContainer">
+          <!-- 符合YouTube要求的嵌入代码：不抑制Referer，使用推荐的参数 -->
+          <iframe id="videoPlayer" 
+                  width="100%" 
+                  height="100%" 
+                  src="https://www.youtube.com/embed/3tmd-ClpJxA" 
+                  title="YouTube视频播放器" 
+                  frameborder="0" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  allowfullscreen
+                  referrerpolicy="strict-origin-when-cross-origin"  <!-- 明确设置iframe的referrer策略 -->
+                  onload="hideLoading()"
+                  onerror="handlePlayerError()">
+          </iframe>
+          
+          <!-- 加载状态指示器 -->
+          <div id="loadingIndicator" class="hidden absolute inset-0 bg-black/5 flex items-center justify-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-secondary"></div>
+          </div>
+          
+          <!-- 错误提示区 -->
+          <div id="errorDisplay" class="hidden absolute inset-0 bg-red-50 flex flex-col items-center justify-center p-6 text-center">
+            <i class="fa fa-exclamation-circle text-red-500 text-5xl mb-4"></i>
+            <h3 class="text-xl font-bold text-red-800 mb-2">视频播放失败</h3>
+            <p id="errorMessage" class="text-red-700">请检查视频嵌入代码是否正确</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 第二模块：视频代码输入区 -->
+    <section>
+      <div class="bg-white rounded-xl p-4 md:p-6 player-shadow">
+        <h2 class="text-xl md:text-2xl font-semibold mb-4 text-dark">更换视频</h2>
+        <p class="text-gray-600 mb-6 text-sm md:text-base">
+          请输入视频网站的嵌入代码（支持YouTube、Vimeo、B站等主流视频平台）
+        </p>
+        
+        <!-- YouTube官方要求说明 -->
+        <div class="bg-blue-50 border-l-4 border-primary p-4 mb-6 rounded-r">
+          <h3 class="font-medium text-primary flex items-center">
+            <i class="fa fa-info-circle mr-2"></i>YouTube嵌入要求
+          </h3>
+          <ul class="mt-2 text-sm text-gray-700 space-y-1 list-disc list-inside">
+            <li>已配置推荐的Referrer-Policy: strict-origin-when-cross-origin</li>
+            <li>所有链接和iframe均不包含noreferrer属性，确保Referer正常传递</li>
+            <li>请使用允许嵌入的视频，并通过localhost或HTTPS环境访问</li>
+          </ul>
+        </div>
+        
+        <form id="videoForm" class="space-y-4">
+          <div>
+            <label for="videoCode" class="block text-sm font-medium text-gray-700 mb-1">视频嵌入代码</label>
+            <textarea id="videoCode" 
+                      rows="4" 
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-smooth resize-none"
+                      placeholder='例如: <iframe src="https://www.youtube.com/embed/视频ID" referrerpolicy="strict-origin-when-cross-origin"...></iframe>'>
+<iframe width="100%" height="100%" src="https://www.youtube.com/embed/mhJRzQsLZGg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </textarea>
+          </div>
+          
+          <div class="flex flex-col sm:flex-row gap-3">
+            <button type="submit" class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-medium transition-smooth flex-1 flex items-center justify-center">
+              <i class="fa fa-refresh mr-2"></i> 更换视频
+            </button>
+            <button type="button" id="resetBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-medium transition-smooth">
+              <i class="fa fa-undo mr-2"></i> 重置
+            </button>
+          </div>
+        </form>
+        
+        <div id="message" class="mt-4 hidden p-3 rounded-lg text-sm"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-dark text-white/70 py-8 mt-16">
+    <div class="container mx-auto px-4 text-center text-sm">
+      <p>© 2023 Live 视频播放器 | 支持各大主流视频平台</p>
+      <p class="mt-2">使用嵌入代码前，请确保您拥有相应视频的使用权限</p>
+    </div>
+  </footer>
+
+  <script>
+    // 获取DOM元素
+    const videoForm = document.getElementById('videoForm');
+    const videoCode = document.getElementById('videoCode');
+    const videoContainer = document.getElementById('videoContainer');
+    let videoPlayer = document.getElementById('videoPlayer');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const errorDisplay = document.getElementById('errorDisplay');
+    const errorMessage = document.getElementById('errorMessage');
+    const message = document.getElementById('message');
+    const resetBtn = document.getElementById('resetBtn');
+    
+    // 保存默认视频代码
+    const defaultVideoCode = videoCode.value;
+    
+    // 显示消息
+    function showMessage(text, isError = false) {
+      message.textContent = text;
+      message.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+      
+      if (isError) {
+        message.classList.add('bg-red-100', 'text-red-800');
+      } else {
+        message.classList.add('bg-green-100', 'text-green-800');
+      }
+      
+      setTimeout(() => message.classList.add('hidden'), 3000);
+    }
+    
+    // 隐藏加载状态
+    function hideLoading() {
+      loadingIndicator.classList.add('hidden');
+      errorDisplay.classList.add('hidden');
+    }
+    
+    // 处理播放器错误
+    function handlePlayerError() {
+      loadingIndicator.classList.add('hidden');
+      errorDisplay.classList.remove('hidden');
+      
+      if (videoPlayer.src.includes('youtube.com')) {
+        errorMessage.innerHTML = `
+          视频播放失败：可能是Referer传递异常或视频权限限制<br>
+          请确认：<br>
+          1. 视频已开启"允许嵌入"<br>
+          2. 通过localhost或HTTPS环境访问<br>
+          3. 未使用抑制Referer的浏览器设置
+        `;
+      } else {
+        errorMessage.textContent = '视频无法播放：请检查代码或更换视频';
+      }
+    }
+    
+    // 优化嵌入代码（确保包含正确的referrerpolicy）
+    function optimizeEmbedCode(code) {
+      // 如果是YouTube代码且没有referrerpolicy，自动添加
+      if (code.includes('youtube.com/embed') && !code.includes('referrerpolicy')) {
+        return code.replace('<iframe', '<iframe referrerpolicy="strict-origin-when-cross-origin"');
+      }
+      // 移除可能存在的noreferrer属性
+      return code.replace(/noreferrer/g, '');
+    }
+    
+    // 更换视频
+    function changeVideo(code) {
+      const optimizedCode = optimizeEmbedCode(code);
+      
+      if (!optimizedCode.includes('<iframe') || !optimizedCode.includes('</iframe>')) {
+        showMessage('请输入有效的视频嵌入代码（需包含iframe标签）', true);
+        return false;
+      }
+      
+      loadingIndicator.classList.remove('hidden');
+      errorDisplay.classList.add('hidden');
+      
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = optimizedCode;
+      const newIframe = tempDiv.querySelector('iframe');
+      
+      if (!newIframe) {
+        loadingIndicator.classList.add('hidden');
+        showMessage('未能从代码中找到有效的视频播放器', true);
+        return false;
+      }
+      
+      // 强制设置符合要求的属性
+      newIframe.width = '100%';
+      newIframe.height = '100%';
+      newIframe.id = 'videoPlayer';
+      newIframe.frameborder = '0';
+      // 确保不包含抑制Referer的属性
+      newIframe.removeAttribute('noreferrer');
+      // 设置推荐的referrer策略
+      if (!newIframe.hasAttribute('referrerpolicy')) {
+        newIframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+      }
+      
+      newIframe.onload = hideLoading;
+      newIframe.onerror = handlePlayerError;
+      
+      videoContainer.replaceChild(newIframe, videoPlayer);
+      videoPlayer = newIframe;
+      
+      return true;
+    }
+    
+    // 表单提交事件
+    videoForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const code = videoCode.value.trim();
+      
+      if (!code) {
+        showMessage('请输入视频嵌入代码', true);
+        return;
+      }
+      
+      changeVideo(code);
+    });
+    
+    // 重置按钮事件
+    resetBtn.addEventListener('click', () => {
+      videoCode.value = defaultVideoCode;
+      changeVideo(defaultVideoCode);
+    });
+    
+    // 初始化
+    window.addEventListener('load', () => {
+      // 检查当前环境是否符合要求
+      const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (!isSecure) {
+        showMessage('警告：建议通过localhost或HTTPS环境访问以确保视频正常播放', true);
+      } else {
+        showMessage('环境检测正常：已配置YouTube推荐的Referrer-Policy');
+      }
+    });
+  </script>
+</body>
+</html>
