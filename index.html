@@ -3,11 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- 关键：设置Referrer-Policy为YouTube推荐的strict-origin-when-cross-origin -->
-  <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
   <title>Live</title>
-  
   <!-- 引入Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- 引入Font Awesome图标 -->
@@ -56,7 +52,6 @@
         <h1 class="text-2xl font-bold">Live</h1>
       </div>
       <nav>
-        <!-- 移除所有noreferrer属性，确保Referer正常传递 -->
         <a href="#" class="text-white/80 hover:text-secondary transition-smooth px-3 py-2">
           <i class="fa fa-question-circle mr-1"></i>帮助
         </a>
@@ -70,30 +65,20 @@
       <div class="bg-white rounded-xl p-4 md:p-6 player-shadow">
         <h2 class="text-xl md:text-2xl font-semibold mb-4 text-dark">视频播放区</h2>
         <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden relative flex items-center justify-center" id="videoContainer">
-          <!-- 符合YouTube要求的嵌入代码：不抑制Referer，使用推荐的参数 -->
+          <!-- 默认视频示例 - YouTube视频 -->
           <iframe id="videoPlayer" 
                   width="100%" 
                   height="100%" 
-                  src="https://www.youtube.com/embed/3tmd-ClpJxA" 
+                  src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
                   title="YouTube视频播放器" 
                   frameborder="0" 
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                  allowfullscreen
-                  referrerpolicy="strict-origin-when-cross-origin"  <!-- 明确设置iframe的referrer策略 -->
-                  onload="hideLoading()"
-                  onerror="handlePlayerError()">
+                  allowfullscreen>
           </iframe>
           
           <!-- 加载状态指示器 -->
           <div id="loadingIndicator" class="hidden absolute inset-0 bg-black/5 flex items-center justify-center">
             <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-secondary"></div>
-          </div>
-          
-          <!-- 错误提示区 -->
-          <div id="errorDisplay" class="hidden absolute inset-0 bg-red-50 flex flex-col items-center justify-center p-6 text-center">
-            <i class="fa fa-exclamation-circle text-red-500 text-5xl mb-4"></i>
-            <h3 class="text-xl font-bold text-red-800 mb-2">视频播放失败</h3>
-            <p id="errorMessage" class="text-red-700">请检查视频嵌入代码是否正确</p>
           </div>
         </div>
       </div>
@@ -107,26 +92,14 @@
           请输入视频网站的嵌入代码（支持YouTube、Vimeo、B站等主流视频平台）
         </p>
         
-        <!-- YouTube官方要求说明 -->
-        <div class="bg-blue-50 border-l-4 border-primary p-4 mb-6 rounded-r">
-          <h3 class="font-medium text-primary flex items-center">
-            <i class="fa fa-info-circle mr-2"></i>YouTube嵌入要求
-          </h3>
-          <ul class="mt-2 text-sm text-gray-700 space-y-1 list-disc list-inside">
-            <li>已配置推荐的Referrer-Policy: strict-origin-when-cross-origin</li>
-            <li>所有链接和iframe均不包含noreferrer属性，确保Referer正常传递</li>
-            <li>请使用允许嵌入的视频，并通过localhost或HTTPS环境访问</li>
-          </ul>
-        </div>
-        
         <form id="videoForm" class="space-y-4">
           <div>
             <label for="videoCode" class="block text-sm font-medium text-gray-700 mb-1">视频嵌入代码</label>
             <textarea id="videoCode" 
                       rows="4" 
                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-smooth resize-none"
-                      placeholder='例如: <iframe src="https://www.youtube.com/embed/视频ID" referrerpolicy="strict-origin-when-cross-origin"...></iframe>'>
-<iframe width="100%" height="100%" src="https://www.youtube.com/embed/mhJRzQsLZGg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                      placeholder='例如: <iframe src="https://www.youtube.com/embed/视频ID"...></iframe>'>
+<iframe width="100%" height="100%" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube视频播放器" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </textarea>
           </div>
           
@@ -157,10 +130,8 @@
     const videoForm = document.getElementById('videoForm');
     const videoCode = document.getElementById('videoCode');
     const videoContainer = document.getElementById('videoContainer');
-    let videoPlayer = document.getElementById('videoPlayer');
+    const videoPlayer = document.getElementById('videoPlayer');
     const loadingIndicator = document.getElementById('loadingIndicator');
-    const errorDisplay = document.getElementById('errorDisplay');
-    const errorMessage = document.getElementById('errorMessage');
     const message = document.getElementById('message');
     const resetBtn = document.getElementById('resetBtn');
     
@@ -178,57 +149,28 @@
         message.classList.add('bg-green-100', 'text-green-800');
       }
       
-      setTimeout(() => message.classList.add('hidden'), 3000);
-    }
-    
-    // 隐藏加载状态
-    function hideLoading() {
-      loadingIndicator.classList.add('hidden');
-      errorDisplay.classList.add('hidden');
-    }
-    
-    // 处理播放器错误
-    function handlePlayerError() {
-      loadingIndicator.classList.add('hidden');
-      errorDisplay.classList.remove('hidden');
-      
-      if (videoPlayer.src.includes('youtube.com')) {
-        errorMessage.innerHTML = `
-          视频播放失败：可能是Referer传递异常或视频权限限制<br>
-          请确认：<br>
-          1. 视频已开启"允许嵌入"<br>
-          2. 通过localhost或HTTPS环境访问<br>
-          3. 未使用抑制Referer的浏览器设置
-        `;
-      } else {
-        errorMessage.textContent = '视频无法播放：请检查代码或更换视频';
-      }
-    }
-    
-    // 优化嵌入代码（确保包含正确的referrerpolicy）
-    function optimizeEmbedCode(code) {
-      // 如果是YouTube代码且没有referrerpolicy，自动添加
-      if (code.includes('youtube.com/embed') && !code.includes('referrerpolicy')) {
-        return code.replace('<iframe', '<iframe referrerpolicy="strict-origin-when-cross-origin"');
-      }
-      // 移除可能存在的noreferrer属性
-      return code.replace(/noreferrer/g, '');
+      // 3秒后自动隐藏消息
+      setTimeout(() => {
+        message.classList.add('hidden');
+      }, 3000);
     }
     
     // 更换视频
     function changeVideo(code) {
-      const optimizedCode = optimizeEmbedCode(code);
-      
-      if (!optimizedCode.includes('<iframe') || !optimizedCode.includes('</iframe>')) {
+      // 简单验证代码是否包含iframe标签
+      if (!code.includes('<iframe') || !code.includes('</iframe>')) {
         showMessage('请输入有效的视频嵌入代码（需包含iframe标签）', true);
         return false;
       }
       
+      // 显示加载状态
       loadingIndicator.classList.remove('hidden');
-      errorDisplay.classList.add('hidden');
       
+      // 创建临时div解析HTML
       const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = optimizedCode;
+      tempDiv.innerHTML = code;
+      
+      // 获取第一个iframe元素
       const newIframe = tempDiv.querySelector('iframe');
       
       if (!newIframe) {
@@ -237,23 +179,22 @@
         return false;
       }
       
-      // 强制设置符合要求的属性
+      // 设置iframe属性以确保响应式显示
       newIframe.width = '100%';
       newIframe.height = '100%';
       newIframe.id = 'videoPlayer';
-      newIframe.frameborder = '0';
-      // 确保不包含抑制Referer的属性
-      newIframe.removeAttribute('noreferrer');
-      // 设置推荐的referrer策略
-      if (!newIframe.hasAttribute('referrerpolicy')) {
-        newIframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
-      }
       
-      newIframe.onload = hideLoading;
-      newIframe.onerror = handlePlayerError;
-      
+      // 替换现有播放器
       videoContainer.replaceChild(newIframe, videoPlayer);
+      
+      // 更新全局引用
       videoPlayer = newIframe;
+      
+      // 隐藏加载状态并显示成功消息
+      setTimeout(() => {
+        loadingIndicator.classList.add('hidden');
+        showMessage('视频已成功更新');
+      }, 800);
       
       return true;
     }
@@ -277,15 +218,9 @@
       changeVideo(defaultVideoCode);
     });
     
-    // 初始化
+    // 页面加载完成后初始化
     window.addEventListener('load', () => {
-      // 检查当前环境是否符合要求
-      const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      if (!isSecure) {
-        showMessage('警告：建议通过localhost或HTTPS环境访问以确保视频正常播放', true);
-      } else {
-        showMessage('环境检测正常：已配置YouTube推荐的Referrer-Policy');
-      }
+      showMessage('就绪：请输入视频嵌入代码更换播放内容');
     });
   </script>
 </body>
