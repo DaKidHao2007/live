@@ -3,25 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- 补充跨域引用策略，适配YouTube -->
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
   <title>Live</title>
-  <!-- 引入Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 引入Font Awesome图标 -->
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
   
-  <!-- 配置Tailwind主题 -->
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
             primary: '#165DFF',
-            secondary: '#FB7299', // B站粉色作为辅助色
+            secondary: '#FB7299',
             dark: '#121212',
-            light: '#F5F5F7'
+            'deep-gray': '#1E1E1E', // 深灰色主背景
+            'gray-dark': '#2D2D2D'   // 辅助深灰色
           },
           fontFamily: {
             inter: ['Inter', 'system-ui', 'sans-serif'],
@@ -31,14 +28,10 @@
     }
   </script>
   
-  <!-- 自定义工具类 -->
   <style type="text/tailwindcss">
     @layer utilities {
       .content-auto {
         content-visibility: auto;
-      }
-      .player-shadow {
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
       }
       .transition-smooth {
         transition: all 0.3s ease-in-out;
@@ -46,30 +39,29 @@
     }
   </style>
 </head>
-<!-- 网页背景改为黑色，文本颜色调整为浅色 -->
-<body class="font-inter bg-dark text-gray-200 min-h-screen">
-  <!-- 导航栏：高度缩减为原来的1/5（通过减少内边距实现） -->
-  <header class="bg-dark text-white shadow-md">
-    <div class="container mx-auto px-4 py-1 flex justify-between items-center"> <!-- py-1 大幅缩减高度 -->
+<!-- 背景改为深灰色 -->
+<body class="font-inter bg-deep-gray text-gray-200 min-h-screen m-0 p-0">
+  <!-- 导航栏：进一步缩减内边距，消除底部多余空间 -->
+  <header class="bg-gray-dark text-white shadow-sm">
+    <div class="container mx-auto px-4 py-1 flex justify-between items-center"> <!-- py-1保持高度，无额外底部间距 -->
       <div class="flex items-center space-x-2">
-        <i class="fa fa-play-circle text-secondary text-xl"></i> <!-- 图标尺寸同步缩小 -->
-        <h1 class="text-xl font-bold">Live</h1> <!-- 标题尺寸同步缩小 -->
+        <i class="fa fa-play-circle text-secondary text-xl"></i>
+        <h1 class="text-xl font-bold">Live</h1>
       </div>
       <nav>
-        <a href="#" class="text-white/80 hover:text-secondary transition-smooth px-3 py-1"> <!-- 内边距同步缩减 -->
+        <a href="#" class="text-white/80 hover:text-secondary transition-smooth px-3 py-1">
         </a>
       </nav>
     </div>
   </header>
 
-  <!-- 主内容区：减少左右内边距，让播放器更贴近边缘 -->
-  <main class="container mx-auto px-2 py-4 md:py-8"> <!-- px-2 减少左右间距 -->
-    <!-- 第一模块：视频播放器 -->
-    <section class="mb-6 md:mb-10">
-      <!-- 播放器外部无边框、无圆角、无内边距，宽度最大化 -->
-      <div class="bg-transparent"> <!-- 移除白色背景和边框 -->
-        <div class="aspect-video bg-gray-900 rounded-none overflow-hidden relative flex items-center justify-center w-full" id="videoContainer"> <!-- w-full 撑满宽度，移除圆角 -->
-          <!-- 默认视频示例 - B站视频 -->
+  <!-- 主内容区：几乎消除顶部内边距，让播放器贴近导航栏 -->
+  <main class="container mx-auto px-2 py-1"> <!-- py-1 最小化顶部间距 -->
+    <!-- 视频播放器区域：消除顶部margin，贴近导航栏 -->
+    <section class="mt-0 mb-6 md:mb-10"> <!-- mt-0 移除顶部margin -->
+      <div class="bg-transparent">
+        <!-- 播放器容器：无额外内边距，顶部紧贴导航栏 -->
+        <div class="aspect-video bg-gray-dark rounded-none overflow-hidden relative flex items-center justify-center w-full" id="videoContainer">
           <iframe id="videoPlayer" 
                   width="100%" 
                   height="100%" 
@@ -99,9 +91,9 @@
       </div>
     </section>
 
-    <!-- 第二模块：视频代码输入区 -->
+    <!-- 视频代码输入区 -->
     <section>
-      <div class="bg-gray-900 rounded-lg p-4 md:p-6"> <!-- 深色背景适配黑色主题 -->
+      <div class="bg-gray-dark rounded-lg p-4 md:p-6">
         <h2 class="text-xl md:text-2xl font-semibold mb-4 text-white">LiveIDs</h2>
         
         <form id="videoForm" class="space-y-4">
@@ -109,7 +101,7 @@
             <label for="videoCode" class="block text-sm font-medium text-gray-300 mb-1">Embed Video Code</label>
             <textarea id="videoCode" 
                       rows="4" 
-                      class="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-smooth resize-none text-gray-200"
+                      class="w-full px-4 py-3 border border-gray-700 bg-deep-gray rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-smooth resize-none text-gray-200"
                       placeholder='例如: <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=..."></iframe>'>
 <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=115551665980936&bvid=BV11MC5BxEbi&cid=34015086238&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" allow="scripts"></iframe>
             </textarea>
@@ -125,8 +117,8 @@
           </div>
         </form>
 
-        <!-- 帮助说明（适配深色主题） -->
-        <div class="bg-blue-900/30 border-l-4 border-primary p-4 mt-6 rounded-r">
+        <!-- 帮助说明 -->
+        <div class="bg-blue-900/20 border-l-4 border-primary p-4 mt-6 rounded-r">
           <h3 class="font-medium text-primary flex items-center">
             <i class="fa fa-info-circle mr-2"></i>Help
           </h3>
@@ -134,8 +126,8 @@
             <div>
               <span class="font-medium text-blue-300">BiliBili 要求：</span>
               <ul class="list-disc list-inside mt-1 space-y-1 pl-2">
-                <li>必须包含完整协议 <code class="bg-gray-700 px-1 rounded text-gray-200">https://</code>（不能用 <code class="bg-gray-700 px-1 rounded text-gray-200">//</code>）</li>
-                <li>代码中需添加参数 <code class="bg-gray-700 px-1 rounded text-gray-200">isOutside=true</code>（允许外部嵌入）</li>
+                <li>必须包含完整协议 <code class="bg-gray-700 px-1 rounded text-gray-200">https://</code></li>
+                <li>代码中需添加参数 <code class="bg-gray-700 px-1 rounded text-gray-200">isOutside=true</code></li>
                 <li>需包含权限配置 <code class="bg-gray-700 px-1 rounded text-gray-200">allow="scripts; fullscreen"</code></li>
               </ul>
             </div>
@@ -143,8 +135,7 @@
               <span class="font-medium text-blue-300">YouTube 要求：</span>
               <ul class="list-disc list-inside mt-1 space-y-1 pl-2">
                 <li>嵌入地址格式为 <code class="bg-gray-700 px-1 rounded text-gray-200">https://www.youtube.com/embed/视频ID</code></li>
-                <li>视频需在YouTube后台开启"允许嵌入"权限</li>
-                <li>推荐添加 <code class="bg-gray-700 px-1 rounded text-gray-200">referrerpolicy="strict-origin-when-cross-origin"</code></li>
+                <li>视频需开启"允许嵌入"权限</li>
               </ul>
             </div>
           </div>
@@ -155,7 +146,7 @@
     </section>
   </main>
 
-  <footer class="bg-gray-900 text-white/50 py-4 mt-8"> <!-- 适配黑色主题，缩减高度 -->
+  <footer class="bg-gray-dark text-white/50 py-4 mt-8">
     <div class="container mx-auto px-4 text-center text-sm">
       <p>© 2025 Live </p>
     </div>
@@ -176,7 +167,7 @@
     // 保存默认视频代码
     const defaultVideoCode = videoCode.value;
     
-    // 显示消息（适配深色主题）
+    // 显示消息
     function showMessage(text, isError = false) {
       message.textContent = text;
       message.classList.remove('hidden', 'bg-green-900/30', 'text-green-300', 'bg-red-900/30', 'text-red-300');
@@ -199,7 +190,7 @@
       showMessage('视频加载成功');
     }
     
-    // 处理播放器错误（分平台提示）
+    // 处理播放器错误
     function handlePlayerError() {
       loadingIndicator.classList.add('hidden');
       errorDisplay.classList.remove('hidden');
@@ -213,18 +204,15 @@
       }
     }
     
-    // 优化视频代码（支持B站和YouTube）
+    // 优化视频代码
     function optimizeVideoCode(code) {
       let optimized = code;
-      // 补全B站协议
       if (optimized.includes('bilibili.com') && optimized.includes('src="//')) {
         optimized = optimized.replace('src="//', 'src="https://');
       }
-      // 为YouTube添加推荐的referrerpolicy
       if (optimized.includes('youtube.com/embed') && !optimized.includes('referrerpolicy')) {
         optimized = optimized.replace('<iframe', '<iframe referrerpolicy="strict-origin-when-cross-origin"');
       }
-      // 移除可能的抑制属性
       optimized = optimized.replace(/noreferrer/g, '');
       return optimized;
     }
@@ -233,17 +221,14 @@
     function changeVideo(code) {
       const optimizedCode = optimizeVideoCode(code);
       
-      // 验证iframe标签
       if (!optimizedCode.includes('<iframe') || !optimizedCode.includes('</iframe>')) {
         showMessage('请输入有效的视频嵌入代码（需包含iframe标签）', true);
         return false;
       }
       
-      // 显示加载状态
       loadingIndicator.classList.remove('hidden');
       errorDisplay.classList.add('hidden');
       
-      // 解析iframe
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = optimizedCode;
       const newIframe = tempDiv.querySelector('iframe');
@@ -254,22 +239,18 @@
         return false;
       }
       
-      // 强制设置必要属性（通用优化）
       newIframe.width = '100%';
       newIframe.height = '100%';
       newIframe.id = 'videoPlayer';
       newIframe.frameborder = '0';
       newIframe.scrolling = 'no';
       
-      // 添加必要权限（适配多平台）
       const existingAllow = newIframe.allow || '';
       newIframe.allow = existingAllow + '; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; scripts';
       
-      // 绑定事件
       newIframe.onload = hideLoading;
       newIframe.onerror = handlePlayerError;
       
-      // 替换播放器
       videoContainer.replaceChild(newIframe, videoPlayer);
       videoPlayer = newIframe;
       
@@ -297,7 +278,6 @@
     
     // 初始化
     window.addEventListener('load', () => {
-      // 检测环境并提示
       const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       if (!isSecure) {
         showMessage('提示：YouTube视频在HTTPS/localhost环境下播放更稳定', false);
