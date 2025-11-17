@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 补充跨域引用策略，适配YouTube -->
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
   <title>Live</title>
   <!-- 引入Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -63,25 +66,27 @@
     <section class="mb-12 md:mb-20">
       <div class="bg-white rounded-xl p-4 md:p-6 player-shadow">
         <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden relative flex items-center justify-center" id="videoContainer">
-          <!-- 默认视频示例 - B站视频（确保可播放） -->
+          <!-- 默认视频示例 - B站视频 -->
           <iframe id="videoPlayer" 
                   width="100%" 
                   height="100%" 
                   src="https://player.bilibili.com/player.html?isOutside=true&aid=54121728&bvid=BV1kJ411p7mV&cid=94542679&page=1" 
-                  title="B站视频播放器" 
+                  title="视频播放器" 
                   frameborder="0" 
                   scrolling="no"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; scripts"
+                  referrerpolicy="strict-origin-when-cross-origin"
                   onload="hideLoading()"
                   onerror="handlePlayerError()">
           </iframe>
           
-          <!-- 加载状态指示器 -->
-          <div id="loadingIndicator" class="hidden absolute inset-0 bg-black/5 flex items-center justify-center">
-            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-secondary"></div>
+          <!-- 加载状态指示器（增加文字提示） -->
+          <div id="loadingIndicator" class="hidden absolute inset-0 bg-black/5 flex flex-col items-center justify-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-secondary mb-4"></div>
+            <p class="text-dark font-medium">视频加载中...</p>
           </div>
           
-          <!-- 错误提示区 -->
+          <!-- 错误提示区（更详细的平台提示） -->
           <div id="errorDisplay" class="hidden absolute inset-0 bg-red-50 flex flex-col items-center justify-center p-6 text-center">
             <i class="fa fa-exclamation-circle text-red-500 text-5xl mb-4"></i>
             <h3 class="text-xl font-bold text-red-800 mb-2">视频播放失败</h3>
@@ -95,10 +100,6 @@
     <section>
       <div class="bg-white rounded-xl p-4 md:p-6 player-shadow">
         <h2 class="text-xl md:text-2xl font-semibold mb-4 text-dark">LiveIDs</h2>
-        <p class="text-gray-600 mb-6 text-sm md:text-base">
-
-        </p>
-        
         
         <form id="videoForm" class="space-y-4">
           <div>
@@ -121,34 +122,30 @@
           </div>
         </form>
 
-        <!-- 平台-specific使用说明 -->
-        <div class="bg-blue-50 border-l-4 border-primary p-4 mb-6 rounded-r">
+        <!-- 帮助说明（更清晰的格式） -->
+        <div class="bg-blue-50 border-l-4 border-primary p-4 mt-6 rounded-r">
           <h3 class="font-medium text-primary flex items-center">
             <i class="fa fa-info-circle mr-2"></i>Help
           </h3>
           <div class="mt-2 text-sm text-gray-700 space-y-3">
             <div>
-              <span class="font-medium">BiliBili：</span>
-              <ul class="list-disc list-inside mt-1 space-y-1">
-                <li>need <code class="bg-gray-100 px-1 rounded">https://</code></li>
-                <li>need <code class="bg-gray-100 px-1 rounded">isOutside=true</code> </li>
-                <li>need <code class="bg-gray-100 px-1 rounded">allow="scripts; fullscreen"</code></li>
+              <span class="font-medium">BiliBili 要求：</span>
+              <ul class="list-disc list-inside mt-1 space-y-1 pl-2">
+                <li>必须包含完整协议 <code class="bg-gray-100 px-1 rounded">https://</code>（不能用 <code class="bg-gray-100 px-1 rounded">//</code>）</li>
+                <li>代码中需添加参数 <code class="bg-gray-100 px-1 rounded">isOutside=true</code>（允许外部嵌入）</li>
+                <li>需包含权限配置 <code class="bg-gray-100 px-1 rounded">allow="scripts; fullscreen"</code></li>
               </ul>
             </div>
             <div>
-              <span class="font-medium">YouTube：</span>
-              <ul class="list-disc list-inside mt-1">
-                <li>code <code class="bg-gray-100 px-1 rounded">https://www.youtube.com/embed/视频ID</code></li>
+              <span class="font-medium">YouTube 要求：</span>
+              <ul class="list-disc list-inside mt-1 space-y-1 pl-2">
+                <li>嵌入地址格式为 <code class="bg-gray-100 px-1 rounded">https://www.youtube.com/embed/视频ID</code></li>
+                <li>视频需在YouTube后台开启"允许嵌入"权限</li>
+                <li>推荐添加 <code class="bg-gray-100 px-1 rounded">referrerpolicy="strict-origin-when-cross-origin"</code></li>
               </ul>
             </div>
           </div>
         </div>
-
-
-
-
-
-
         
         <div id="message" class="mt-4 hidden p-3 rounded-lg text-sm"></div>
       </div>
@@ -158,7 +155,6 @@
   <footer class="bg-dark text-white/70 py-8 mt-16">
     <div class="container mx-auto px-4 text-center text-sm">
       <p>© 2025 Live </p>
-      <p class="mt-2"></p>
     </div>
   </footer>
 
@@ -197,34 +193,42 @@
     function hideLoading() {
       loadingIndicator.classList.add('hidden');
       errorDisplay.classList.add('hidden');
+      showMessage('视频加载成功');
     }
     
-    // 处理播放器错误（针对B站的特殊处理）
+    // 处理播放器错误（分平台提示）
     function handlePlayerError() {
       loadingIndicator.classList.add('hidden');
       errorDisplay.classList.remove('hidden');
       
-      // 检测是否是B站链接，给出针对性提示
       if (videoPlayer.src.includes('bilibili.com')) {
-        errorMessage.textContent = 'B站视频播放失败：请检查是否添加了https://协议，或尝试更换其他视频';
+        errorMessage.innerHTML = 'B站视频播放失败：<br>1. 请检查是否添加 https:// 协议<br>2. 确认代码包含 isOutside=true 参数<br>3. 尝试更换其他视频';
+      } else if (videoPlayer.src.includes('youtube.com')) {
+        errorMessage.innerHTML = 'YouTube视频播放失败：<br>1. 请检查视频是否开启"允许嵌入"<br>2. 确保使用 https:// 协议<br>3. 尝试在localhost/HTTPS环境访问';
       } else {
-        errorMessage.textContent = '视频无法播放：可能是嵌入权限受限，请检查代码或更换视频';
+        errorMessage.textContent = '视频无法播放：请检查嵌入代码格式或更换视频';
       }
     }
     
-    // 优化B站代码（自动补全协议）
-    function optimizeBilibiliCode(code) {
-      if (code.includes('bilibili.com') && code.includes('src="//')) {
-        // 将相对协议//替换为https://
-        return code.replace('src="//', 'src="https://');
+    // 优化视频代码（支持B站和YouTube）
+    function optimizeVideoCode(code) {
+      let optimized = code;
+      // 补全B站协议
+      if (optimized.includes('bilibili.com') && optimized.includes('src="//')) {
+        optimized = optimized.replace('src="//', 'src="https://');
       }
-      return code;
+      // 为YouTube添加推荐的referrerpolicy
+      if (optimized.includes('youtube.com/embed') && !optimized.includes('referrerpolicy')) {
+        optimized = optimized.replace('<iframe', '<iframe referrerpolicy="strict-origin-when-cross-origin"');
+      }
+      // 移除可能的抑制属性
+      optimized = optimized.replace(/noreferrer/g, '');
+      return optimized;
     }
     
     // 更换视频
     function changeVideo(code) {
-      // 优化B站代码（自动补全协议）
-      const optimizedCode = optimizeBilibiliCode(code);
+      const optimizedCode = optimizeVideoCode(code);
       
       // 验证iframe标签
       if (!optimizedCode.includes('<iframe') || !optimizedCode.includes('</iframe>')) {
@@ -247,14 +251,14 @@
         return false;
       }
       
-      // 强制设置必要属性（针对B站优化）
+      // 强制设置必要属性（通用优化）
       newIframe.width = '100%';
       newIframe.height = '100%';
       newIframe.id = 'videoPlayer';
       newIframe.frameborder = '0';
       newIframe.scrolling = 'no';
       
-      // 添加必要权限（B站需要scripts权限运行播放器）
+      // 添加必要权限（适配多平台）
       const existingAllow = newIframe.allow || '';
       newIframe.allow = existingAllow + '; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; scripts';
       
@@ -290,7 +294,13 @@
     
     // 初始化
     window.addEventListener('load', () => {
-      showMessage('就绪：支持B站、YouTube等平台的视频嵌入');
+      // 检测环境并提示
+      const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (!isSecure) {
+        showMessage('提示：YouTube视频在HTTPS/localhost环境下播放更稳定', false);
+      } else {
+        showMessage('就绪：支持B站、YouTube等平台的视频嵌入', false);
+      }
     });
   </script>
 </body>
