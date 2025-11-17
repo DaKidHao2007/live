@@ -46,26 +46,29 @@
     }
   </style>
 </head>
-<body class="font-inter bg-light min-h-screen">
-  <!-- 导航栏 -->
+<!-- 网页背景改为黑色，文本颜色调整为浅色 -->
+<body class="font-inter bg-dark text-gray-200 min-h-screen">
+  <!-- 导航栏：高度缩减为原来的1/5（通过减少内边距实现） -->
   <header class="bg-dark text-white shadow-md">
-    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+    <div class="container mx-auto px-4 py-1 flex justify-between items-center"> <!-- py-1 大幅缩减高度 -->
       <div class="flex items-center space-x-2">
-        <i class="fa fa-play-circle text-secondary text-2xl"></i>
-        <h1 class="text-2xl font-bold">Live</h1>
+        <i class="fa fa-play-circle text-secondary text-xl"></i> <!-- 图标尺寸同步缩小 -->
+        <h1 class="text-xl font-bold">Live</h1> <!-- 标题尺寸同步缩小 -->
       </div>
       <nav>
-        <a href="#" class="text-white/80 hover:text-secondary transition-smooth px-3 py-2">
+        <a href="#" class="text-white/80 hover:text-secondary transition-smooth px-3 py-1"> <!-- 内边距同步缩减 -->
         </a>
       </nav>
     </div>
   </header>
 
-  <main class="container mx-auto px-4 py-8 md:py-16">
+  <!-- 主内容区：减少左右内边距，让播放器更贴近边缘 -->
+  <main class="container mx-auto px-2 py-4 md:py-8"> <!-- px-2 减少左右间距 -->
     <!-- 第一模块：视频播放器 -->
-    <section class="mb-12 md:mb-20">
-      <div class="bg-white rounded-xl p-4 md:p-6 player-shadow">
-        <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden relative flex items-center justify-center" id="videoContainer">
+    <section class="mb-6 md:mb-10">
+      <!-- 播放器外部无边框、无圆角、无内边距，宽度最大化 -->
+      <div class="bg-transparent"> <!-- 移除白色背景和边框 -->
+        <div class="aspect-video bg-gray-900 rounded-none overflow-hidden relative flex items-center justify-center w-full" id="videoContainer"> <!-- w-full 撑满宽度，移除圆角 -->
           <!-- 默认视频示例 - B站视频 -->
           <iframe id="videoPlayer" 
                   width="100%" 
@@ -80,17 +83,17 @@
                   onerror="handlePlayerError()">
           </iframe>
           
-          <!-- 加载状态指示器（增加文字提示） -->
-          <div id="loadingIndicator" class="hidden absolute inset-0 bg-black/5 flex flex-col items-center justify-center">
+          <!-- 加载状态指示器 -->
+          <div id="loadingIndicator" class="hidden absolute inset-0 bg-black/30 flex flex-col items-center justify-center">
             <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-secondary mb-4"></div>
-            <p class="text-dark font-medium">视频加载中...</p>
+            <p class="text-white font-medium">视频加载中...</p>
           </div>
           
-          <!-- 错误提示区（更详细的平台提示） -->
-          <div id="errorDisplay" class="hidden absolute inset-0 bg-red-50 flex flex-col items-center justify-center p-6 text-center">
-            <i class="fa fa-exclamation-circle text-red-500 text-5xl mb-4"></i>
-            <h3 class="text-xl font-bold text-red-800 mb-2">视频播放失败</h3>
-            <p id="errorMessage" class="text-red-700">请检查视频嵌入代码是否正确</p>
+          <!-- 错误提示区 -->
+          <div id="errorDisplay" class="hidden absolute inset-0 bg-red-900/30 flex flex-col items-center justify-center p-6 text-center">
+            <i class="fa fa-exclamation-circle text-red-400 text-5xl mb-4"></i>
+            <h3 class="text-xl font-bold text-red-300 mb-2">视频播放失败</h3>
+            <p id="errorMessage" class="text-red-200">请检查视频嵌入代码是否正确</p>
           </div>
         </div>
       </div>
@@ -98,15 +101,15 @@
 
     <!-- 第二模块：视频代码输入区 -->
     <section>
-      <div class="bg-white rounded-xl p-4 md:p-6 player-shadow">
-        <h2 class="text-xl md:text-2xl font-semibold mb-4 text-dark">LiveIDs</h2>
+      <div class="bg-gray-900 rounded-lg p-4 md:p-6"> <!-- 深色背景适配黑色主题 -->
+        <h2 class="text-xl md:text-2xl font-semibold mb-4 text-white">LiveIDs</h2>
         
         <form id="videoForm" class="space-y-4">
           <div>
-            <label for="videoCode" class="block text-sm font-medium text-gray-700 mb-1">Embed Video Code</label>
+            <label for="videoCode" class="block text-sm font-medium text-gray-300 mb-1">Embed Video Code</label>
             <textarea id="videoCode" 
                       rows="4" 
-                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-smooth resize-none"
+                      class="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-smooth resize-none text-gray-200"
                       placeholder='例如: <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=..."></iframe>'>
 <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=115551665980936&bvid=BV11MC5BxEbi&cid=34015086238&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" allow="scripts"></iframe>
             </textarea>
@@ -116,32 +119,32 @@
             <button type="submit" class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-medium transition-smooth flex-1 flex items-center justify-center">
               <i class="fa fa-refresh mr-2"></i> Update
             </button>
-            <button type="button" id="resetBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-medium transition-smooth">
+            <button type="button" id="resetBtn" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-6 py-3 rounded-lg font-medium transition-smooth">
               <i class="fa fa-undo mr-2"></i> default
             </button>
           </div>
         </form>
 
-        <!-- 帮助说明（更清晰的格式） -->
-        <div class="bg-blue-50 border-l-4 border-primary p-4 mt-6 rounded-r">
+        <!-- 帮助说明（适配深色主题） -->
+        <div class="bg-blue-900/30 border-l-4 border-primary p-4 mt-6 rounded-r">
           <h3 class="font-medium text-primary flex items-center">
             <i class="fa fa-info-circle mr-2"></i>Help
           </h3>
-          <div class="mt-2 text-sm text-gray-700 space-y-3">
+          <div class="mt-2 text-sm text-gray-300 space-y-3">
             <div>
-              <span class="font-medium">BiliBili 要求：</span>
+              <span class="font-medium text-blue-300">BiliBili 要求：</span>
               <ul class="list-disc list-inside mt-1 space-y-1 pl-2">
-                <li>必须包含完整协议 <code class="bg-gray-100 px-1 rounded">https://</code>（不能用 <code class="bg-gray-100 px-1 rounded">//</code>）</li>
-                <li>代码中需添加参数 <code class="bg-gray-100 px-1 rounded">isOutside=true</code>（允许外部嵌入）</li>
-                <li>需包含权限配置 <code class="bg-gray-100 px-1 rounded">allow="scripts; fullscreen"</code></li>
+                <li>必须包含完整协议 <code class="bg-gray-700 px-1 rounded text-gray-200">https://</code>（不能用 <code class="bg-gray-700 px-1 rounded text-gray-200">//</code>）</li>
+                <li>代码中需添加参数 <code class="bg-gray-700 px-1 rounded text-gray-200">isOutside=true</code>（允许外部嵌入）</li>
+                <li>需包含权限配置 <code class="bg-gray-700 px-1 rounded text-gray-200">allow="scripts; fullscreen"</code></li>
               </ul>
             </div>
             <div>
-              <span class="font-medium">YouTube 要求：</span>
+              <span class="font-medium text-blue-300">YouTube 要求：</span>
               <ul class="list-disc list-inside mt-1 space-y-1 pl-2">
-                <li>嵌入地址格式为 <code class="bg-gray-100 px-1 rounded">https://www.youtube.com/embed/视频ID</code></li>
+                <li>嵌入地址格式为 <code class="bg-gray-700 px-1 rounded text-gray-200">https://www.youtube.com/embed/视频ID</code></li>
                 <li>视频需在YouTube后台开启"允许嵌入"权限</li>
-                <li>推荐添加 <code class="bg-gray-100 px-1 rounded">referrerpolicy="strict-origin-when-cross-origin"</code></li>
+                <li>推荐添加 <code class="bg-gray-700 px-1 rounded text-gray-200">referrerpolicy="strict-origin-when-cross-origin"</code></li>
               </ul>
             </div>
           </div>
@@ -152,7 +155,7 @@
     </section>
   </main>
 
-  <footer class="bg-dark text-white/70 py-8 mt-16">
+  <footer class="bg-gray-900 text-white/50 py-4 mt-8"> <!-- 适配黑色主题，缩减高度 -->
     <div class="container mx-auto px-4 text-center text-sm">
       <p>© 2025 Live </p>
     </div>
@@ -173,15 +176,15 @@
     // 保存默认视频代码
     const defaultVideoCode = videoCode.value;
     
-    // 显示消息
+    // 显示消息（适配深色主题）
     function showMessage(text, isError = false) {
       message.textContent = text;
-      message.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+      message.classList.remove('hidden', 'bg-green-900/30', 'text-green-300', 'bg-red-900/30', 'text-red-300');
       
       if (isError) {
-        message.classList.add('bg-red-100', 'text-red-800');
+        message.classList.add('bg-red-900/30', 'text-red-300');
       } else {
-        message.classList.add('bg-green-100', 'text-green-800');
+        message.classList.add('bg-green-900/30', 'text-green-300');
       }
       
       setTimeout(() => {
