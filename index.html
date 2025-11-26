@@ -62,10 +62,11 @@
       <div class="bg-transparent">
         <!-- 播放器容器：无额外内边距，顶部紧贴导航栏 -->
         <div class="aspect-video bg-gray-dark rounded-none overflow-hidden relative flex items-center justify-center w-full" id="videoContainer">
+          <!-- 默认B站视频：添加 high_quality=1 强制最高分辨率 -->
           <iframe id="videoPlayer" 
                   width="100%" 
                   height="100%" 
-                  src="https://player.bilibili.com/player.html?isOutside=true&aid=54121728&bvid=BV1kJ411p7mV&cid=94542679&page=1" 
+                  src="https://player.bilibili.com/player.html?isOutside=true&aid=54121728&bvid=BV1kJ411p7mV&cid=94542679&page=1&high_quality=1" 
                   title="视频播放器" 
                   frameborder="0" 
                   scrolling="no"
@@ -99,11 +100,12 @@
         <form id="videoForm" class="space-y-4">
           <div>
             <label for="videoCode" class="block text-sm font-medium text-gray-300 mb-1">Embed Video Code</label>
+            <!-- 默认输入框示例代码添加 high_quality=1 -->
             <textarea id="videoCode" 
                       rows="4" 
                       class="w-full px-4 py-3 border border-gray-700 bg-deep-gray rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-smooth resize-none text-gray-200"
-                      placeholder='例如: <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=..."></iframe>'>
-<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=115551665980936&bvid=BV11MC5BxEbi&cid=34015086238&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" allow="scripts"></iframe>
+                      placeholder='例如: <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=...&high_quality=1"></iframe>'>
+<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=115551665980936&bvid=BV11MC5BxEbi&cid=34015086238&p=1&high_quality=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" allow="scripts"></iframe>
             </textarea>
           </div>
           
@@ -117,17 +119,19 @@
           </div>
         </form>
 
-        <!-- 帮助说明 -->
+        <!-- 帮助说明：补充高分辨率参数说明 -->
         <div class="bg-blue-900/20 border-l-4 border-primary p-4 mt-6 rounded-r">
           <h3 class="font-medium text-primary flex items-center">
             <i class="fa fa-info-circle mr-2"></i>Help
           </h3>
           <div class="mt-2 text-sm text-gray-300 space-y-3">
             <div>
-              <span class="font-medium text-blue-300">BiliBili 要求：</span>
+              <span class="font-medium text-blue-300">BiliBili 要求（默认最高分辨率）：</span>
               <ul class="list-disc list-inside mt-1 space-y-1 pl-2">
                 <li>必须包含完整协议 <code class="bg-gray-700 px-1 rounded text-gray-200">https://</code></li>
-                <li>代码中需添加参数 <code class="bg-gray-700 px-1 rounded text-gray-200">isOutside=true</code></li>
+                <li>代码中需添加参数 <code class="bg-gray-700 px-1 rounded text-gray-200">isOutside=true</code>（允许外部嵌入）</li>
+                <li>添加 <code class="bg-gray-700 px-1 rounded text-gray-200">high_quality=1</code>（强制加载最高可用分辨率）</li>
+                <li>原视频需支持高分辨率（如1080P/4K），否则自动降级到最高可用画质</li>
                 <li>需包含权限配置 <code class="bg-gray-700 px-1 rounded text-gray-200">allow="scripts; fullscreen"</code></li>
               </ul>
             </div>
@@ -135,7 +139,7 @@
               <span class="font-medium text-blue-300">YouTube 要求：</span>
               <ul class="list-disc list-inside mt-1 space-y-1 pl-2">
                 <li>嵌入地址格式为 <code class="bg-gray-700 px-1 rounded text-gray-200">https://www.youtube.com/embed/视频ID</code></li>
-                <li>视频需开启"允许嵌入"权限</li>
+                <li>视频需开启"允许嵌入"权限，YouTube会自动加载最高可用分辨率</li>
               </ul>
             </div>
           </div>
@@ -187,16 +191,16 @@
     function hideLoading() {
       loadingIndicator.classList.add('hidden');
       errorDisplay.classList.add('hidden');
-      showMessage('视频加载成功');
+      showMessage('视频加载成功（默认最高分辨率）');
     }
     
-    // 处理播放器错误
+    // 处理播放器错误（补充高分辨率相关提示）
     function handlePlayerError() {
       loadingIndicator.classList.add('hidden');
       errorDisplay.classList.remove('hidden');
       
       if (videoPlayer.src.includes('bilibili.com')) {
-        errorMessage.innerHTML = 'B站视频播放失败：<br>1. 请检查是否添加 https:// 协议<br>2. 确认代码包含 isOutside=true 参数<br>3. 尝试更换其他视频';
+        errorMessage.innerHTML = 'B站视频播放失败：<br>1. 请检查是否添加 https:// 协议<br>2. 确认代码包含 isOutside=true 参数<br>3. 原视频需支持高分辨率（1080P/4K）<br>4. 尝试更换其他视频';
       } else if (videoPlayer.src.includes('youtube.com')) {
         errorMessage.innerHTML = 'YouTube视频播放失败：<br>1. 请检查视频是否开启"允许嵌入"<br>2. 确保使用 https:// 协议<br>3. 尝试在localhost/HTTPS环境访问';
       } else {
@@ -204,20 +208,39 @@
       }
     }
     
-    // 优化视频代码
+    // 优化视频代码：自动为B站添加 high_quality=1（核心修改）
     function optimizeVideoCode(code) {
       let optimized = code;
+      
+      // 1. 补全B站协议
       if (optimized.includes('bilibili.com') && optimized.includes('src="//')) {
         optimized = optimized.replace('src="//', 'src="https://');
       }
+      
+      // 2. 自动为B站添加 high_quality=1（如果没有该参数）
+      if (optimized.includes('bilibili.com/player.html') && !optimized.includes('high_quality')) {
+        // 处理URL参数拼接逻辑（区分是否已有其他参数）
+        if (optimized.includes('?')) {
+          // 已有参数，在末尾添加 &high_quality=1
+          optimized = optimized.replace(/player.html\?([^"]+)/, 'player.html?$1&high_quality=1');
+        } else {
+          // 无参数，直接添加 ?high_quality=1
+          optimized = optimized.replace('player.html', 'player.html?high_quality=1');
+        }
+      }
+      
+      // 3. YouTube相关优化（保持不变）
       if (optimized.includes('youtube.com/embed') && !optimized.includes('referrerpolicy')) {
         optimized = optimized.replace('<iframe', '<iframe referrerpolicy="strict-origin-when-cross-origin"');
       }
+      
+      // 4. 移除抑制属性（保持不变）
       optimized = optimized.replace(/noreferrer/g, '');
+      
       return optimized;
     }
     
-    // 更换视频
+    // 更换视频（保持不变）
     function changeVideo(code) {
       const optimizedCode = optimizeVideoCode(code);
       
@@ -257,7 +280,7 @@
       return true;
     }
     
-    // 表单提交
+    // 表单提交（保持不变）
     videoForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const code = videoCode.value.trim();
@@ -270,19 +293,19 @@
       changeVideo(code);
     });
     
-    // 重置按钮
+    // 重置按钮（保持不变）
     resetBtn.addEventListener('click', () => {
       videoCode.value = defaultVideoCode;
       changeVideo(defaultVideoCode);
     });
     
-    // 初始化
+    // 初始化（保持不变，补充高分辨率提示）
     window.addEventListener('load', () => {
       const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       if (!isSecure) {
         showMessage('提示：YouTube视频在HTTPS/localhost环境下播放更稳定', false);
       } else {
-        showMessage('就绪：支持B站、YouTube等平台的视频嵌入', false);
+        showMessage('就绪：支持B站、YouTube等平台的视频嵌入（B站默认最高分辨率）', false);
       }
     });
   </script>
