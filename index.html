@@ -94,14 +94,11 @@
 
     <!-- 视频代码输入区：紧凑布局优化 -->
     <section>
-      <div class="bg-gray-dark rounded-lg p-3 md:p-4"> <!-- 缩减外层内边距 -->
-        <h2 class="text-lg md:text-xl font-semibold mb-2 text-white">LiveIDs</h2> <!-- 缩小标题尺寸+缩减间距 -->
-        
+      <div class="bg-gray-dark rounded-lg p-3 md:p-4"> <!-- 缩减外层内边距 -->        
         <!-- 核心布局：输入框左、按钮右（响应式适配） -->
         <form id="videoForm" class="flex flex-col md:flex-row gap-3 items-end">
           <!-- 输入框区域：占满剩余宽度 -->
           <div class="flex-1">
-            <label for="videoCode" class="block text-xs font-medium text-gray-300 mb-1">Embed Video Code</label> <!-- 缩小标签字号 -->
             <!-- 缩减输入框高度：rows从4→3，减少内边距 -->
             <textarea id="videoCode" 
                       rows="3" 
